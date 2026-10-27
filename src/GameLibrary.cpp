@@ -49,6 +49,9 @@ static const SystemInfo kSystems[] = {
 	{ "smc", "snes9x2005", "Super Nintendo" },
 	{ "zip", "mame2003_plus", B_TRANSLATE_MARK("Arcade") },
 	{ "vec", "vecx", "Vectrex" },
+	{ "cue", "pcsx_rearmed", "PlayStation" },
+	{ "pbp", "pcsx_rearmed", "PlayStation" },
+	{ "chd", "pcsx_rearmed", "PlayStation" },
 	{ "tic", "tic80", "TIC-80" },
 };
 
