@@ -1,0 +1,33 @@
+--- ../new_dynarec.c.orig	2026-10-27 23:25:21.065911234 +0100
++++ libpcsxcore/new_dynarec/new_dynarec.c	2026-10-27 23:25:21.077911234 +0100
+@@ -31,6 +31,9 @@
+ #ifdef _3DS
+ #include <3ds_utils.h>
+ #endif
++#ifdef __HAIKU__
++#include <image.h> // clear_caches()
++#endif
+ #ifdef HAVE_LIBNX
+ #include <switch.h>
+ static Jit g_jit;
+@@ -515,6 +518,9 @@
+   // __clear_cache() doesn't handle differing cacheline sizes on big.LITTLE and
+   // leaves it to the kernel to virtualize ctr_el0, which some old kernels don't do
+   clear_cache_arm64(start, end);
++  #elif defined(__HAIKU__)
++  // libgcc's __clear_cache is an empty stub on ARM Haiku
++  clear_caches(start, len, B_FLUSH_DCACHE | B_INVALIDATE_ICACHE);
+   #else
+   __clear_cache(start, end);
+   #endif
+--- ../psxbios.c.orig	2026-10-27 23:50:28.905802009 +0100
++++ libpcsxcore/psxbios.c	2026-10-27 23:50:28.905802009 +0100
+@@ -3633,7 +3633,7 @@
+ 	// spu: clear reverb ram
+ 	spu_clear_mem(spu_config[0x22/2] << 3, 0x80000 - (spu_config[0x22/2] << 3));
+ 	// spu regs
+-	for (i = 0x1f801d80; i < sizeof(spu_config) / sizeof(spu_config[0]); i++)
++	for (i = 0; i < sizeof(spu_config) / sizeof(spu_config[0]); i++)
+ 		SPU_writeRegister(0x1f801d80 + i*2, spu_config[i], psxRegs.cycle);
+ 	for (i = 0; i < 24; i++) {
+ 		SPU_writeRegister(0x1f801c06 + i*0x10, 0x1000>>3, psxRegs.cycle); // start

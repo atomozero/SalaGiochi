@@ -38,6 +38,9 @@ private:
 			Screen*				_Current() const { return fCurrent; }
 			void				_StartGame(int32 index);
 			void				_StopGame();
+			bool				_StartNative(const char* path);
+			void				_StopNative();
+	static	status_t			_WaitForNative(void* data);
 			void				_SetPaused(bool paused);
 			void				_OpenParents(bool askQuestion);
 			void				_CloseParents();
@@ -69,6 +72,7 @@ private:
 			bigtime_t			fCornerDown;	// mouse held on the sun
 			BMessageRunner*		fCornerRunner;
 			bigtime_t			fPadComboStart;
+			team_id				fNativeTeam;	// a Haiku game running
 };
 
 

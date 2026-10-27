@@ -11,6 +11,12 @@
 #include <InterfaceDefs.h>
 #include <MessageRunner.h>
 #include <Screen.h>
+#include <StringList.h>
+
+#include <stdio.h>
+#include <unistd.h>
+
+#include <algorithm>
 
 #include "Core.h"
 #include "GameView.h"
@@ -100,7 +106,8 @@ MainWindow::MainWindow()
 	fComboStart(0),
 	fCornerDown(0),
 	fCornerRunner(NULL),
-	fPadComboStart(0)
+	fPadComboStart(0),
+	fNativeTeam(-1)
 {
 	memset(fKeysDown, 0, sizeof(fKeysDown));
 
@@ -147,6 +154,7 @@ MainWindow::~MainWindow()
 bool
 MainWindow::QuitRequested()
 {
+	_StopNative();
 	_StopGame();
 	fSettings.Save();
 	return true;
@@ -404,6 +412,16 @@ MainWindow::MessageReceived(BMessage* message)
 			if (fCore != NULL)
 				fCore->SetVolume(fSettings.MaxVolume() / 100.0f);
 			break;
+		case kMsgNativeEnded:
+			fNativeTeam = -1;
+			delete fPlayRunner;
+			fPlayRunner = NULL;
+			fSettings.Save();
+			if (IsHidden())
+				Show();
+			_Show(fSettings.MinutesLeft() > 0 ? (Screen*)fLauncher : fTimeUp);
+			Activate();
+			break;
 		case kMsgExitApp:
 			_StopGame();
 			fSettings.Save();
@@ -426,6 +444,12 @@ MainWindow::_StartGame(int32 index)
 	}
 
 	const Game& game = fLibrary.GameAt(index);
+	if (game.native) {
+		if (!_StartNative(game.path.String()))
+			beep();
+		return;
+	}
+
 	fCore = new Core(BMessenger(this), fGamepad);
 	if (fCore->Load(game.core.String(), game.path.String(),
 			game.saveBase.String()) != B_OK) {
@@ -448,6 +472,82 @@ MainWindow::_StartGame(int32 index)
 	delete fPlayRunner;
 	fPlayRunner = new BMessageRunner(BMessenger(this),
 		new BMessage(kMsgPlayTick), kPlayInterval);
+}
+
+
+/*!	Starts the program a .gioco file names, with its arguments, and hides
+	while it runs; the time played counts as for the other games.
+*/
+bool
+MainWindow::_StartNative(const char* path)
+{
+	FILE* file = fopen(path, "r");
+	if (file == NULL)
+		return false;
+	BStringList arguments;
+	char line[B_PATH_NAME_LENGTH];
+	while (fgets(line, sizeof(line), file) != NULL) {
+		BString argument(line);
+		argument.RemoveAll("\n").RemoveAll("\r").Trim();
+		if (!argument.IsEmpty() && argument.ByteAt(0) != '#')
+			arguments.Add(argument);
+	}
+	fclose(file);
+	if (arguments.IsEmpty())
+		return false;
+
+	const char* argv[64];
+	int32 count = std::min<int32>(arguments.CountStrings(), 63);
+	for (int32 i = 0; i < count; i++)
+		argv[i] = arguments.StringAt(i).String();
+	argv[count] = NULL;
+
+	fNativeTeam = load_image(count, argv, (const char**)environ);
+	if (fNativeTeam < 0) {
+		fNativeTeam = -1;
+		return false;
+	}
+	resume_thread(fNativeTeam);
+	thread_id waiter = spawn_thread(_WaitForNative, "wait for game",
+		B_NORMAL_PRIORITY, this);
+	resume_thread(waiter);
+
+	fLastPlayTick = system_time();
+	delete fPlayRunner;
+	fPlayRunner = new BMessageRunner(BMessenger(this),
+		new BMessage(kMsgPlayTick), kPlayInterval);
+	Hide();
+	return true;
+}
+
+
+status_t
+MainWindow::_WaitForNative(void* data)
+{
+	MainWindow* window = (MainWindow*)data;
+	status_t result;
+	// the main thread of a team has the team's id
+	wait_for_thread(window->fNativeTeam, &result);
+	BMessenger(window).SendMessage(kMsgNativeEnded);
+	return B_OK;
+}
+
+
+void
+MainWindow::_StopNative()
+{
+	if (fNativeTeam < 0)
+		return;
+	BMessenger game(NULL, fNativeTeam);
+	game.SendMessage(B_QUIT_REQUESTED);
+	// ask nicely, then insist
+	for (int32 i = 0; i < 20; i++) {
+		team_info info;
+		if (get_team_info(fNativeTeam, &info) != B_OK)
+			return;
+		snooze(100000);
+	}
+	kill_team(fNativeTeam);
 }
 
 
@@ -489,9 +589,15 @@ void
 MainWindow::_PlayTick()
 {
 	bigtime_t now = system_time();
-	if (fCore != NULL && !fCore->IsPaused() && _Current() == fGameView)
+	if ((fCore != NULL && !fCore->IsPaused() && _Current() == fGameView)
+		|| fNativeTeam >= 0)
 		fSettings.AddPlayed((now - fLastPlayTick) / 60000000.0f);
 	fLastPlayTick = now;
+
+	if (fNativeTeam >= 0 && fSettings.MinutesLeft() <= 0) {
+		_StopNative();
+		return;
+	}
 
 	if (fCore != NULL && fSettings.MinutesLeft() <= 0) {
 		_StopGame();

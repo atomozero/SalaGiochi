@@ -53,6 +53,8 @@ static const SystemInfo kSystems[] = {
 	{ "pbp", "pcsx_rearmed", "PlayStation" },
 	{ "chd", "pcsx_rearmed", "PlayStation" },
 	{ "tic", "tic80", "TIC-80" },
+	// a text file: the program to start, then one argument per line
+	{ "gioco", NULL, B_TRANSLATE_MARK("Haiku game") },
 };
 
 
@@ -211,9 +213,12 @@ GameLibrary::Scan()
 		if (system == NULL)
 			continue;
 
-		BString core = _FindCore(system->core);
-		if (core.IsEmpty())
-			continue;
+		BString core;
+		if (system->core != NULL) {
+			core = _FindCore(system->core);
+			if (core.IsEmpty())
+				continue;
+		}
 
 		BPath path;
 		entry.GetPath(&path);
@@ -225,7 +230,9 @@ GameLibrary::Scan()
 		game.path = path.Path();
 		game.core = core;
 		game.system = B_TRANSLATE_NOCOLLECT(system->system);
-		game.arcade = strcmp(system->core, "mame2003_plus") == 0;
+		game.arcade = system->core != NULL
+			&& strcmp(system->core, "mame2003_plus") == 0;
+		game.native = system->core == NULL;
 		game.saveBase = fSaveDirectory;
 		game.saveBase << "/" << base;
 		game.cover = load_cover(BPath(fDirectory.String()), base);

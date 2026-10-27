@@ -24,6 +24,7 @@ struct Game {
 			rgb_color			color;		// tile color without a cover
 			BBitmap*			cover;		// may be NULL
 			bool				arcade;		// needs a coin before Start
+			bool				native;		// a Haiku program, see .gioco
 };
 
 

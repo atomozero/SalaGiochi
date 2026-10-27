@@ -18,6 +18,7 @@ enum {
 	kMsgCloseParents	= 'clpr',
 	kMsgExitApp			= 'exit',
 	kMsgSettingsChanged	= 'sets',
+	kMsgNativeEnded		= 'nend',	// a Haiku game was closed
 };
 
 
