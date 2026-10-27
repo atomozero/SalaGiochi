@@ -48,6 +48,9 @@ public:
 
 			void				SetKeyButtons(uint32 buttons)
 									{ fKeyButtons = buttons; }
+			// Start puts a coin in first, as arcade games want
+			void				SetCoinOnStart(bool coin)
+									{ fCoinOnStart = coin; }
 
 			const BBitmap*		LockFrame(BRect& source);
 			void				UnlockFrame();
@@ -89,6 +92,7 @@ private:
 			void				_SetupBitmaps(unsigned width,
 									unsigned height);
 			void				_StartAudio();
+			void				_CoinOnStart(uint32& buttons);
 
 			BMessenger			fTarget;
 			Gamepad*			fGamepad;
@@ -129,6 +133,9 @@ private:
 
 			std::atomic<uint32>	fKeyButtons;
 			uint32				fPolledButtons;
+			bool				fCoinOnStart;
+			bool				fStartWasDown;
+			int32				fCoinFrames;	// of the coin sequence left
 
 			thread_id			fThread;
 			sem_id				fPauseSem;

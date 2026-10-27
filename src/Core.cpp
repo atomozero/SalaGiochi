@@ -114,6 +114,9 @@ Core::Core(const BMessenger& target, Gamepad* gamepad)
 	fVolume(1.0f),
 	fKeyButtons(0),
 	fPolledButtons(0),
+	fCoinOnStart(false),
+	fStartWasDown(false),
+	fCoinFrames(0),
 	fThread(-1),
 	fPauseSem(-1),
 	fQuit(false),
@@ -709,6 +712,7 @@ Core::_InputPoll()
 	uint32 buttons = sCurrent->fKeyButtons;
 	if (sCurrent->fGamepad != NULL)
 		buttons |= sCurrent->fGamepad->Buttons();
+	sCurrent->_CoinOnStart(buttons);
 	sCurrent->fPolledButtons = buttons;
 }
 
@@ -725,6 +729,33 @@ Core::_InputState(unsigned port, unsigned device, unsigned index, unsigned id)
 	if (id > 15)
 		return 0;
 	return (buttons >> id) & 1;
+}
+
+
+/*!	Turns a press of Start into: the coin (Select) for a few frames, a
+	pause, then Start, for arcade games.
+*/
+void
+Core::_CoinOnStart(uint32& buttons)
+{
+	const uint32 start = 1U << RETRO_DEVICE_ID_JOYPAD_START;
+	const uint32 select = 1U << RETRO_DEVICE_ID_JOYPAD_SELECT;
+	if (!fCoinOnStart)
+		return;
+
+	bool startDown = (buttons & start) != 0;
+	if (startDown && !fStartWasDown && fCoinFrames == 0)
+		fCoinFrames = 24;
+	fStartWasDown = startDown;
+
+	if (fCoinFrames > 0) {
+		buttons &= ~start;
+		if (fCoinFrames > 18)
+			buttons |= select;
+		else if (fCoinFrames <= 6)
+			buttons |= start;
+		fCoinFrames--;
+	}
 }
 
 

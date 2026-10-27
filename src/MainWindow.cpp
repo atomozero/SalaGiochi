@@ -435,6 +435,7 @@ MainWindow::_StartGame(int32 index)
 		return;
 	}
 	fCore->SetVolume(fSettings.MaxVolume() / 100.0f);
+	fCore->SetCoinOnStart(game.arcade);
 	memset(fKeysDown, 0, sizeof(fKeysDown));
 	fCore->SetKeyButtons(0);
 

@@ -48,6 +48,8 @@ static const SystemInfo kSystems[] = {
 	{ "sfc", "snes9x2005", "Super Nintendo" },
 	{ "smc", "snes9x2005", "Super Nintendo" },
 	{ "zip", "mame2003_plus", B_TRANSLATE_MARK("Arcade") },
+	{ "vec", "vecx", "Vectrex" },
+	{ "tic", "tic80", "TIC-80" },
 };
 
 
@@ -220,6 +222,7 @@ GameLibrary::Scan()
 		game.path = path.Path();
 		game.core = core;
 		game.system = B_TRANSLATE_NOCOLLECT(system->system);
+		game.arcade = strcmp(system->core, "mame2003_plus") == 0;
 		game.saveBase = fSaveDirectory;
 		game.saveBase << "/" << base;
 		game.cover = load_cover(BPath(fDirectory.String()), base);

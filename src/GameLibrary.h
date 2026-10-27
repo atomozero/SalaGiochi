@@ -23,6 +23,7 @@ struct Game {
 			BString				saveBase;	// saves, without extension
 			rgb_color			color;		// tile color without a cover
 			BBitmap*			cover;		// may be NULL
+			bool				arcade;		// needs a coin before Start
 };
 
 
