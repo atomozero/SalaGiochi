@@ -27,6 +27,8 @@ public:
 
 /*!	The parents' settings: time per day, the loudest volume, the games to
 	show. Kept simple: up and down choose a line, left and right change it.
+	Opened with the mouse or a gamepad, it first asks a multiplication that a
+	small child can not answer.
 */
 class ParentsView : public Screen {
 public:
@@ -37,17 +39,24 @@ public:
 	virtual	void				MouseDown(BPoint where);
 	virtual	void				HandleAction(Action action);
 
-			void				Reset();
+			void				Reset(bool askQuestion);
 
 private:
 			int32				_CountLines() const;
 			BRect				_LineFrame(int32 line) const;
 			void				_Change(int32 line, int32 direction);
 			void				_Activate(int32 line);
+			void				_DrawQuestion(BRect bounds);
+			BRect				_AnswerFrame(int32 answer) const;
+			void				_Answer(int32 answer);
 
 			GameLibrary&		fLibrary;
 			Settings&			fSettings;
 			int32				fLine;
+			bool				fAsking;
+			int32				fQuestion[2];
+			int32				fAnswers[3];
+			int32				fChoice;
 };
 
 

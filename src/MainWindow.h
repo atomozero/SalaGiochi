@@ -39,7 +39,7 @@ private:
 			void				_StartGame(int32 index);
 			void				_StopGame();
 			void				_SetPaused(bool paused);
-			void				_OpenParents();
+			void				_OpenParents(bool askQuestion);
 			void				_CloseParents();
 			void				_PollPad();
 			void				_PlayTick();
@@ -66,6 +66,9 @@ private:
 			bigtime_t			fPadRepeat;
 			uint32				fKeysDown[8];	// by raw key code
 			bigtime_t			fComboStart;
+			bigtime_t			fCornerDown;	// mouse held on the sun
+			BMessageRunner*		fCornerRunner;
+			bigtime_t			fPadComboStart;
 };
 
 

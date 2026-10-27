@@ -6,6 +6,8 @@
 
 #include "OtherScreens.h"
 
+#include <stdlib.h>
+
 #include <Window.h>
 
 #include <Catalog.h>
@@ -78,17 +80,78 @@ ParentsView::ParentsView(GameLibrary& library, Settings& settings)
 	Screen("parents"),
 	fLibrary(library),
 	fSettings(settings),
-	fLine(0)
+	fLine(0),
+	fAsking(false),
+	fChoice(0)
 {
 	SetViewColor(B_TRANSPARENT_COLOR);
 }
 
 
 void
-ParentsView::Reset()
+ParentsView::Reset(bool askQuestion)
 {
 	fLine = 0;
+	fAsking = askQuestion;
+	fChoice = 0;
+	if (askQuestion) {
+		srand(system_time());
+		fQuestion[0] = 3 + rand() % 7;
+		fQuestion[1] = 3 + rand() % 7;
+		int32 right = fQuestion[0] * fQuestion[1];
+		int32 wrong[2] = { right + fQuestion[0], right - fQuestion[1] };
+		int32 position = rand() % 3;
+		for (int32 i = 0, w = 0; i < 3; i++)
+			fAnswers[i] = i == position ? right : wrong[w++];
+	}
 	Invalidate();
+}
+
+
+BRect
+ParentsView::_AnswerFrame(int32 answer) const
+{
+	BRect bounds = Bounds();
+	float left = bounds.Width() / 2 - 300 + answer * 210;
+	float top = bounds.Height() / 2;
+	return BRect(left, top, left + 180, top + 110);
+}
+
+
+void
+ParentsView::_DrawQuestion(BRect bounds)
+{
+	DrawCentered(this, B_TRANSLATE("For grown-ups: how much is it?"),
+		BRect(0, bounds.Height() / 2 - 190, bounds.right,
+			bounds.Height() / 2 - 140), Font(28), kInk);
+	BString question;
+	question << fQuestion[0] << " × " << fQuestion[1];
+	DrawCentered(this, question.String(), BRect(0, bounds.Height() / 2 - 130,
+		bounds.right, bounds.Height() / 2 - 30), Font(64), kInk);
+
+	for (int32 i = 0; i < 3; i++) {
+		BRect frame = _AnswerFrame(i);
+		if (i == fChoice)
+			FillRound(this, frame.InsetByCopy(-6, -6), 22, kSun);
+		FillRound(this, frame, 18, kWhite);
+		BString answer;
+		answer << fAnswers[i];
+		DrawCentered(this, answer.String(), frame, Font(44), kInk);
+	}
+	DrawCentered(this, B_TRANSLATE("Esc goes back to the games"),
+		BRect(0, bounds.bottom - 70, bounds.right, bounds.bottom - 30),
+		Font(18, false), kInkSoft);
+}
+
+
+void
+ParentsView::_Answer(int32 answer)
+{
+	if (fAnswers[answer] == fQuestion[0] * fQuestion[1]) {
+		fAsking = false;
+		Invalidate();
+	} else
+		Window()->PostMessage(kMsgCloseParents);
 }
 
 
@@ -122,6 +185,10 @@ ParentsView::Draw(BRect updateRect)
 
 	DrawText(this, B_TRANSLATE("Parents' area"), BPoint(32, 50), Font(30),
 		kInk);
+	if (fAsking) {
+		_DrawQuestion(bounds);
+		return;
+	}
 	const char* help = B_TRANSLATE("Up and down choose, left and right "
 		"change, Enter confirms");
 	DrawText(this, help, BPoint(bounds.right - 32
@@ -185,6 +252,13 @@ ParentsView::Draw(BRect updateRect)
 void
 ParentsView::MouseDown(BPoint where)
 {
+	if (fAsking) {
+		for (int32 i = 0; i < 3; i++) {
+			if (_AnswerFrame(i).Contains(where))
+				_Answer(i);
+		}
+		return;
+	}
 	for (int32 line = 0; line < _CountLines(); line++) {
 		BRect frame = _LineFrame(line);
 		if (frame.top < kHeader || !frame.Contains(where))
@@ -203,6 +277,18 @@ ParentsView::MouseDown(BPoint where)
 void
 ParentsView::HandleAction(Action action)
 {
+	if (fAsking) {
+		if (action == kActionLeft && fChoice > 0)
+			fChoice--;
+		else if (action == kActionRight && fChoice < 2)
+			fChoice++;
+		else if (action == kActionConfirm)
+			_Answer(fChoice);
+		else if (action == kActionBack)
+			Window()->PostMessage(kMsgCloseParents);
+		Invalidate();
+		return;
+	}
 	switch (action) {
 		case kActionUp:
 			if (fLine > 0)

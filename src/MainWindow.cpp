@@ -24,6 +24,9 @@
 static const bigtime_t kPadInterval = 40000;
 static const bigtime_t kPlayInterval = 5000000;
 static const bigtime_t kParentsHold = 3000000;
+static const bigtime_t kPadParentsHold = 5000000;
+static const BRect kCorner(0, 0, 110, 72);	// the sun and "Hello!"
+static const uint32 kMsgCornerCheck = 'corn';
 
 // raw key codes of a Haiku keyboard
 enum {
@@ -94,7 +97,10 @@ MainWindow::MainWindow()
 	fLastPlayTick(0),
 	fLastPadButtons(0),
 	fPadRepeat(0),
-	fComboStart(0)
+	fComboStart(0),
+	fCornerDown(0),
+	fCornerRunner(NULL),
+	fPadComboStart(0)
 {
 	memset(fKeysDown, 0, sizeof(fKeysDown));
 
@@ -131,6 +137,7 @@ MainWindow::~MainWindow()
 {
 	delete fPadRunner;
 	delete fPlayRunner;
+	delete fCornerRunner;
 	_StopGame();
 	fSettings.Save();
 	delete fGamepad;
@@ -166,6 +173,19 @@ MainWindow::_Show(Screen* screen)
 void
 MainWindow::DispatchMessage(BMessage* message, BHandler* target)
 {
+	// the mouse or touchpad held three seconds on the sun, top left
+	if (message->what == B_MOUSE_DOWN) {
+		BPoint where;
+		if (message->FindPoint("screen_where", &where) == B_OK
+			&& kCorner.Contains(ConvertFromScreen(where))) {
+			fCornerDown = system_time();
+			delete fCornerRunner;
+			fCornerRunner = new BMessageRunner(BMessenger(this),
+				new BMessage(kMsgCornerCheck), kParentsHold, 1);
+		}
+	} else if (message->what == B_MOUSE_UP)
+		fCornerDown = 0;
+
 	if (message->what == B_KEY_DOWN || message->what == B_UNMAPPED_KEY_DOWN) {
 		if (_HandleKey(message, true))
 			return;
@@ -200,7 +220,7 @@ MainWindow::_HandleKey(BMessage* message, bool down)
 		else if (system_time() - fComboStart >= kParentsHold) {
 			fComboStart = 0;
 			if (_Current() != fParents)
-				_OpenParents();
+				_OpenParents(false);
 		}
 		return true;
 	}
@@ -277,6 +297,22 @@ MainWindow::_PollPad()
 	bool held = buttons != 0 && buttons == fLastPadButtons;
 	fLastPadButtons = buttons;
 
+	// Select and Start held five seconds open the parents' area
+	uint32 both = bit(RETRO_DEVICE_ID_JOYPAD_SELECT)
+		| bit(RETRO_DEVICE_ID_JOYPAD_START);
+	if ((buttons & both) == both) {
+		if (fPadComboStart == 0)
+			fPadComboStart = system_time();
+		else if (system_time() - fPadComboStart >= kPadParentsHold) {
+			fPadComboStart = 0;
+			if (_Current() != fParents)
+				_OpenParents(true);
+			fLastPadButtons = buttons;
+			return;
+		}
+	} else
+		fPadComboStart = 0;
+
 	bool playing = _Current() == fGameView && fCore != NULL
 		&& !fGameView->IsPaused();
 	if (playing) {
@@ -349,7 +385,14 @@ MainWindow::MessageReceived(BMessage* message)
 			_Show(fLauncher);
 			break;
 		case kMsgOpenParents:
-			_OpenParents();
+			_OpenParents(true);
+			break;
+		case kMsgCornerCheck:
+			if (fCornerDown != 0
+				&& system_time() - fCornerDown >= kParentsHold - 100000
+				&& _Current() != fParents)
+				_OpenParents(true);
+			fCornerDown = 0;
 			break;
 		case kMsgCloseParents:
 			_CloseParents();
@@ -460,12 +503,12 @@ MainWindow::_PlayTick()
 
 
 void
-MainWindow::_OpenParents()
+MainWindow::_OpenParents(bool askQuestion)
 {
 	if (fCore != NULL && !fGameView->IsPaused())
 		_SetPaused(true);
 	fBeforeParents = _Current();
-	fParents->Reset();
+	fParents->Reset(askQuestion);
 	_Show(fParents);
 }
 
