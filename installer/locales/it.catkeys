@@ -1,13 +1,17 @@
-1	italian	application/x-vnd.atomozero-SalaGiochi-Installer	3751353363
+1	italian	application/x-vnd.atomozero-SalaGiochi-Installer	939526585
+saves	Paths		salvataggi
+names.txt	Paths		nomi.txt
 %name%: cover found	Installer		%name%: copertina trovata
 %name%: no cover found	Installer		%name%: nessuna copertina trovata
+Drop the games here: files, zip or 7z archives and folders. They are copied to the %folder% folder in your home, with the picture of the box when one can be found, and SalaGiochi shows them right away.	Installer		Trascina qui i giochi: file, archivi zip o 7z e cartelle. Vengono copiati nella cartella %folder% della tua home, con la foto della scatola quando si trova, e SalaGiochi li mostra subito.
 No new games.	Installer		Nessun gioco nuovo.
 %name%: added (%system%)	Installer		%name%: aggiunto (%system%)
 %name%: it can't be copied (%error%)	Installer		%name%: non si può copiare (%error%)
 %name%: the archive can't be read	Installer		%name%: l'archivio non si può leggere
-Drop the games here: files, zip or 7z archives and folders. They are copied to the Giochi folder in your home, with the picture of the box when one can be found, and SalaGiochi shows them right away.	Installer		Trascina qui i giochi: file, archivi zip o 7z e cartelle. Vengono copiati nella cartella Giochi della tua home, con la foto della scatola quando si trova, e SalaGiochi li mostra subito.
 Arcade	Systems		Sala giochi
 Close	Installer		Chiudi
+Games	Paths		Giochi
+covers	Paths		copertine
 {0, plural, one{One new game.} other{# new games.}}	Installer		{0, plural, one{Un gioco nuovo.} other{# giochi nuovi.}}
 %name%: not a game SalaGiochi knows	Installer		%name%: non è un gioco che SalaGiochi conosce
 %name%: it's already there	Installer		%name%: c'è già

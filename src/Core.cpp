@@ -18,6 +18,7 @@
 
 #include "Gamepad.h"
 #include "Messages.h"
+#include "Paths.h"
 
 
 Core* Core::sCurrent = NULL;
@@ -404,7 +405,7 @@ Core::_HandleEnvironment(unsigned command, void* data)
 			*(bool*)data = true;
 			return true;
 		case RETRO_ENVIRONMENT_GET_LANGUAGE:
-			*(unsigned*)data = RETRO_LANGUAGE_ITALIAN;
+			*(unsigned*)data = CoreLanguage();
 			return true;
 		case RETRO_ENVIRONMENT_GET_INPUT_BITMASKS:
 			return true;

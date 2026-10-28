@@ -5,8 +5,9 @@
 
 
 /*!	The parents drop game files here (on the window, or on its icon or a link
-	to it): they are copied to ~/Giochi, taken out of zip and 7z archives,
-	given a cover when one can be found, and SalaGiochi reads them again.
+	to it): they are copied to ~/Games (translated), taken out of zip and 7z
+	archives, given a cover when one can be found, and SalaGiochi reads them
+	again.
 */
 
 
@@ -37,6 +38,7 @@
 #include <Window.h>
 
 #include "../src/Messages.h"
+#include "../src/Paths.h"
 #include "../src/Systems.h"
 
 
@@ -222,12 +224,7 @@ Installer::Installer(BMessenger window, const std::vector<entry_ref>& refs)
 	fRefs(refs),
 	fInstalled(0)
 {
-	BPath path;
-	if (find_directory(B_USER_DIRECTORY, &path) == B_OK) {
-		path.Append("Giochi");
-		create_directory(path.Path(), 0755);
-		fGames = path.Path();
-	}
+	fGames = GamesDirectory();
 }
 
 
@@ -468,8 +465,7 @@ Installer::_GetCover(const char* name)
 		return;
 
 	BString base = base_of(name);
-	BString covers(fGames);
-	covers << "/copertine";
+	BString covers = CoversDirectory(fGames.String());
 	create_directory(covers.String(), 0755);
 	static const char* kExtensions[] = { ".png", ".jpg", ".jpeg" };
 	for (const char* extension : kExtensions) {
@@ -574,10 +570,12 @@ InstallerWindow::InstallerWindow()
 	help->MakeEditable(false);
 	help->MakeSelectable(false);
 	help->SetViewUIColor(B_PANEL_BACKGROUND_COLOR);
-	help->SetText(B_TRANSLATE("Drop the games here: files, zip or 7z archives "
-		"and folders. They are copied to the Giochi folder in your home, "
+	BString text(B_TRANSLATE("Drop the games here: files, zip or 7z archives "
+		"and folders. They are copied to the %folder% folder in your home, "
 		"with the picture of the box when one can be found, and SalaGiochi "
 		"shows them right away."));
+	text.ReplaceFirst("%folder%", BPath(GamesDirectory().String()).Leaf());
+	help->SetText(text.String());
 
 	fLog = new BTextView("log");
 	fLog->MakeEditable(false);

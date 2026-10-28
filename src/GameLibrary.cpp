@@ -22,6 +22,7 @@
 #include <Roster.h>
 #include <TranslationUtils.h>
 
+#include "Paths.h"
 #include "Systems.h"
 
 
@@ -61,15 +62,13 @@ display_name(const char* fileName)
 
 
 /*!	Names for files whose name can not be changed (the arcade sets), one per
-	line in "nomi.txt": "supertnk.zip = Super Tank".
+	line in "names.txt" (translated): "supertnk.zip = Super Tank".
 */
 static std::map<BString, BString>
 read_names(const char* directory)
 {
 	std::map<BString, BString> names;
-	BString path(directory);
-	path << "/nomi.txt";
-	FILE* file = fopen(path.String(), "r");
+	FILE* file = fopen(NamesFile(directory).String(), "r");
 	if (file == NULL)
 		return names;
 	char line[512];
@@ -94,15 +93,15 @@ read_names(const char* directory)
 
 
 static BBitmap*
-load_cover(const BPath& directory, const BString& base)
+load_cover(const char* directory, const BString& base)
 {
-	static const char* kPlaces[] = { "", "copertine/" };
+	BString places[] = { directory, CoversDirectory(directory) };
 	static const char* kExtensions[] = { ".png", ".jpg", ".jpeg" };
-	for (const char* place : kPlaces) {
+	for (const BString& place : places) {
 		for (const char* extension : kExtensions) {
-			BPath path(directory);
+			BPath path(place.String());
 			BString leaf;
-			leaf << place << base << extension;
+			leaf << base << extension;
 			path.Append(leaf.String());
 			if (BEntry(path.Path()).Exists())
 				return BTranslationUtils::GetBitmap(path.Path());
@@ -114,17 +113,10 @@ load_cover(const BPath& directory, const BString& base)
 
 GameLibrary::GameLibrary()
 {
+	fDirectory = GamesDirectory();
+	fSaveDirectory = SavesDirectory();
+
 	BPath path;
-	if (find_directory(B_USER_DIRECTORY, &path) == B_OK) {
-		path.Append("Giochi");
-		create_directory(path.Path(), 0755);
-		fDirectory = path.Path();
-	}
-	if (find_directory(B_USER_SETTINGS_DIRECTORY, &path) == B_OK) {
-		path.Append("SalaGiochi/salvataggi");
-		create_directory(path.Path(), 0755);
-		fSaveDirectory = path.Path();
-	}
 
 	// the cores: next to the application first, then the add-on folders
 	app_info info;
@@ -196,7 +188,7 @@ GameLibrary::Scan()
 		game.native = system->core == NULL;
 		game.saveBase = fSaveDirectory;
 		game.saveBase << "/" << base;
-		game.cover = load_cover(BPath(fDirectory.String()), base);
+		game.cover = load_cover(fDirectory.String(), base);
 		fGames.push_back(game);
 	}
 

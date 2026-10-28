@@ -12,6 +12,7 @@ SIGNATURE := application/x-vnd.atomozero-SalaGiochi
 LANGUAGES := $(basename $(notdir $(filter-out locales/en.catkeys,$(wildcard locales/*.catkeys))))
 XRES ?= xres
 MIMESET ?= mimeset
+ADDATTR ?= addattr
 ARCHFLAGS ?=
 
 SOURCES := $(wildcard src/*.cpp)
@@ -21,8 +22,9 @@ OBJECTS := $(patsubst src/%.cpp,$(OBJDIR)/%.o,$(SOURCES))
 # "Add games": the parents drop game files on it
 INSTALLER := AddGames
 INSTALLER_SIGNATURE := application/x-vnd.atomozero-SalaGiochi-Installer
-INSTALLER_SOURCES := installer/Installer.cpp src/Systems.cpp
-INSTALLER_OBJECTS := $(OBJDIR)/installer/Installer.o $(OBJDIR)/Systems.o
+INSTALLER_SOURCES := installer/Installer.cpp src/Systems.cpp src/Paths.cpp
+INSTALLER_OBJECTS := $(OBJDIR)/installer/Installer.o $(OBJDIR)/Systems.o \
+	$(OBJDIR)/Paths.o
 INSTALLER_LANGUAGES := $(basename $(notdir $(filter-out installer/locales/en.catkeys,$(wildcard installer/locales/*.catkeys))))
 
 CXXFLAGS += -O2 -Wall -Wno-multichar -std=gnu++17 $(ARCHFLAGS)
@@ -55,6 +57,9 @@ $(OBJDIR)/$(INSTALLER): $(INSTALLER_OBJECTS) $(OBJDIR)/$(INSTALLER).rsrc
 	$(CXX) $(ARCHFLAGS) -s -o $@ $(INSTALLER_OBJECTS) -lbe -llocalestub
 	$(XRES) -o $@ $(OBJDIR)/$(INSTALLER).rsrc
 	-$(MIMESET) -f $@
+	# shown translated in Tracker and Deskbar ("Aggiungi giochi")
+	-$(ADDATTR) -t string SYS:NAME \
+		"$(subst application/,,$(INSTALLER_SIGNATURE)):System name:Add games" $@
 
 # installed in data/locale/catalogs/x-vnd.atomozero-SalaGiochi/ and
 # .../x-vnd.atomozero-SalaGiochi-Installer/
