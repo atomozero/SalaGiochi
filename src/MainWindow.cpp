@@ -283,6 +283,9 @@ MainWindow::_HandleKey(BMessage* message, bool down)
 			break;
 		case B_ENTER:
 		case B_SPACE:
+		case 'a':
+		case 'A':
+			// the button on the screen says "A"
 		case 'x':
 		case 'X':
 			action = kActionConfirm;
