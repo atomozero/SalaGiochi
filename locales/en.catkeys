@@ -1,26 +1,27 @@
-1	english	application/x-vnd.atomozero-SalaGiochi	2265871825
-Back to the games	Screens		Back to the games
-Play time per day	Screens		Play time per day
-That's enough playing for today!	Screens		That's enough playing for today!
+1	english	application/x-vnd.atomozero-SalaGiochi	370951500
 shown	Screens		shown
 Loudest volume	Screens		Loudest volume
-Parents can copy them to %folder%	Launcher		Parents can copy them to %folder%
 Choose	Launcher		Choose
-Up and down choose, left and right change, Enter confirms	Screens		Up and down choose, left and right change, Enter confirms
-For grown-ups: how much is it?	Screens		For grown-ups: how much is it?
-%minutes% min	Launcher		%minutes% min
 Esc goes back to the games	Screens		Esc goes back to the games
-Arcade	Systems		Arcade
 Continue	Game		Continue
-Quit to the desktop	Screens		Quit to the desktop
 Pause	Game		Pause
-The games will wait for you tomorrow. The game is saved.	Screens		The games will wait for you tomorrow. The game is saved.
 There are no games here yet	Launcher		There are no games here yet
-Hello!	Launcher		Hello!
-(%played% min used today)    ‹  %minutes% min  ›	Screens		(%played% min used today)    ‹  %minutes% min  ›
 hidden	Screens		hidden
 Other games	Game		Other games
 The game is saved: next time it goes on from here	Game		The game is saved: next time it goes on from here
 Play!	Launcher		Play!
-Parents' area	Screens		Parents' area
 Haiku game	Systems		Haiku game
+Parents' area	Screens		Parents' area
+That's enough playing for today!	Screens		That's enough playing for today!
+Play time per day	Screens		Play time per day
+Back to the games	Screens		Back to the games
+Parents can copy them to %folder%	Launcher		Parents can copy them to %folder%
+%minutes% min	Launcher		%minutes% min
+For grown-ups: how much is it?	Screens		For grown-ups: how much is it?
+Up and down choose, left and right change, Enter confirms	Screens		Up and down choose, left and right change, Enter confirms
+Arcade	Systems		Arcade
+Quit to the desktop	Screens		Quit to the desktop
+The games will wait for you tomorrow. The game is saved.	Screens		The games will wait for you tomorrow. The game is saved.
+Hello!	Launcher		Hello!
+(%played% min used today)    ‹  %minutes% min  ›	Screens		(%played% min used today)    ‹  %minutes% min  ›
+All games	Launcher		All games

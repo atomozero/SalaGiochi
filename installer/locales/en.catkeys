@@ -1,0 +1,16 @@
+1	english	application/x-vnd.atomozero-SalaGiochi-Installer	3751353363
+%name%: cover found	Installer		%name%: cover found
+%name%: no cover found	Installer		%name%: no cover found
+No new games.	Installer		No new games.
+%name%: added (%system%)	Installer		%name%: added (%system%)
+%name%: it can't be copied (%error%)	Installer		%name%: it can't be copied (%error%)
+%name%: the archive can't be read	Installer		%name%: the archive can't be read
+Drop the games here: files, zip or 7z archives and folders. They are copied to the Giochi folder in your home, with the picture of the box when one can be found, and SalaGiochi shows them right away.	Installer		Drop the games here: files, zip or 7z archives and folders. They are copied to the Giochi folder in your home, with the picture of the box when one can be found, and SalaGiochi shows them right away.
+Arcade	Systems		Arcade
+Close	Installer		Close
+{0, plural, one{One new game.} other{# new games.}}	Installer		{0, plural, one{One new game.} other{# new games.}}
+%name%: not a game SalaGiochi knows	Installer		%name%: not a game SalaGiochi knows
+%name%: it's already there	Installer		%name%: it's already there
+Add games	System name		Add games
+%name%: there is no game inside	Installer		%name%: there is no game inside
+Haiku game	Systems		Haiku game

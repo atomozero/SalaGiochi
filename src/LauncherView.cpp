@@ -8,6 +8,8 @@
 
 #include <math.h>
 
+#include <algorithm>
+
 #include <Bitmap.h>
 #include <Catalog.h>
 #include <Message.h>
@@ -62,6 +64,12 @@ LauncherView::~LauncherView()
 void
 LauncherView::GamesChanged()
 {
+	// the console chosen may have no games left
+	std::vector<BString> categories = _Categories();
+	if (std::find(categories.begin(), categories.end(), fCategory)
+			== categories.end())
+		fCategory = "";
+
 	int32 count = _CountVisible();
 	if (fSelected >= count)
 		fSelected = count > 0 ? count - 1 : 0;
@@ -70,12 +78,21 @@ LauncherView::GamesChanged()
 }
 
 
+bool
+LauncherView::_IsVisible(int32 index) const
+{
+	const Game& game = fLibrary.GameAt(index);
+	return !fSettings.IsHidden(game.name.String())
+		&& (fCategory.IsEmpty() || game.system == fCategory);
+}
+
+
 int32
 LauncherView::_CountVisible() const
 {
 	int32 count = 0;
 	for (int32 i = 0; i < fLibrary.CountGames(); i++) {
-		if (!fSettings.IsHidden(fLibrary.GameAt(i).name.String()))
+		if (_IsVisible(i))
 			count++;
 	}
 	return count;
@@ -88,12 +105,51 @@ LauncherView::_VisibleIndex(int32 visible) const
 	if (visible < 0)
 		return -1;
 	for (int32 i = 0; i < fLibrary.CountGames(); i++) {
-		if (fSettings.IsHidden(fLibrary.GameAt(i).name.String()))
+		if (!_IsVisible(i))
 			continue;
 		if (visible-- == 0)
 			return i;
 	}
 	return -1;
+}
+
+
+/*!	"All games" (empty), then the consoles that have games to show, in
+	alphabetical order.
+*/
+std::vector<BString>
+LauncherView::_Categories() const
+{
+	std::vector<BString> categories;
+	for (int32 i = 0; i < fLibrary.CountGames(); i++) {
+		const Game& game = fLibrary.GameAt(i);
+		if (fSettings.IsHidden(game.name.String()))
+			continue;
+		if (std::find(categories.begin(), categories.end(), game.system)
+				== categories.end())
+			categories.push_back(game.system);
+	}
+	std::sort(categories.begin(), categories.end(),
+		[](const BString& a, const BString& b) { return a.ICompare(b) < 0; });
+	categories.insert(categories.begin(), BString());
+	return categories;
+}
+
+
+void
+LauncherView::_ChangeCategory(int32 step)
+{
+	std::vector<BString> categories = _Categories();
+	if (categories.size() <= 2)
+		return;
+	int32 index = std::find(categories.begin(), categories.end(), fCategory)
+		- categories.begin();
+	int32 count = categories.size();
+	fCategory = categories[((index + step) % count + count) % count];
+	fSelected = 0;
+	fScroll = 0;
+	fSounds.Move();
+	Invalidate();
 }
 
 
@@ -134,6 +190,7 @@ LauncherView::Draw(BRect updateRect)
 	FillRect(bounds);
 
 	_DrawTopBar(bounds);
+	_DrawCategory(bounds);
 
 	int32 count = _CountVisible();
 	if (count == 0) {
@@ -207,6 +264,44 @@ LauncherView::_DrawTopBar(BRect bounds)
 		pill.top + 34), kSun);
 	DrawText(this, minutes.String(), BPoint(pill.left + 50, pill.top + 30),
 		font, kWhite);
+}
+
+
+BRect
+LauncherView::_CategoryFrame(BRect bounds) const
+{
+	BString name = fCategory.IsEmpty()
+		? BString(B_TRANSLATE("All games")) : fCategory;
+	float width = std::max(220.0f, Font(22).StringWidth(name.String()) + 96);
+	float centerX = bounds.Width() / 2;
+	return BRect(centerX - width / 2, 14, centerX + width / 2, 58);
+}
+
+
+/*!	The console shown, in the middle of the top bar, with the arrows that
+	change it.
+*/
+void
+LauncherView::_DrawCategory(BRect bounds)
+{
+	if (_Categories().size() <= 2)
+		return;
+
+	BRect pill = _CategoryFrame(bounds);
+	FillRound(this, pill, 22, kNightLight);
+	BString name = fCategory.IsEmpty()
+		? BString(B_TRANSLATE("All games")) : fCategory;
+	DrawCentered(this, name.String(), pill, Font(22), kWhite);
+
+	// up and down arrows on the sides
+	SetHighColor(kSun);
+	float y = pill.top + pill.Height() / 2;
+	for (float x : { pill.left + 26, pill.right - 26 }) {
+		FillTriangle(BPoint(x - 8, y - 3), BPoint(x + 8, y - 3),
+			BPoint(x, y - 13));
+		FillTriangle(BPoint(x - 8, y + 3), BPoint(x + 8, y + 3),
+			BPoint(x, y + 13));
+	}
 }
 
 
@@ -380,6 +475,13 @@ void
 LauncherView::MouseDown(BPoint where)
 {
 	where = ToLayout(where);
+	if (_Categories().size() > 2
+		&& _CategoryFrame(LayoutBounds()).Contains(where)) {
+		_ChangeCategory(where.y < _CategoryFrame(LayoutBounds()).top + 22
+			? -1 : 1);
+		return;
+	}
+
 	int32 count = _CountVisible();
 	// the middle tile is on top: look at it first
 	for (int32 away = 0; away <= 4; away++) {
@@ -403,12 +505,16 @@ LauncherView::HandleAction(Action action)
 {
 	switch (action) {
 		case kActionLeft:
-		case kActionUp:
 			_Select(fSelected - 1);
 			break;
 		case kActionRight:
-		case kActionDown:
 			_Select(fSelected + 1);
+			break;
+		case kActionUp:
+			_ChangeCategory(-1);
+			break;
+		case kActionDown:
+			_ChangeCategory(1);
 			break;
 		case kActionConfirm:
 			_Start();

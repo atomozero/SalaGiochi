@@ -22,40 +22,11 @@
 #include <Roster.h>
 #include <TranslationUtils.h>
 
+#include "Systems.h"
+
 
 #undef B_TRANSLATION_CONTEXT
 #define B_TRANSLATION_CONTEXT "Systems"
-
-
-struct SystemInfo {
-	const char*	extension;
-	const char*	core;
-	const char*	system;
-};
-
-
-static const SystemInfo kSystems[] = {
-	{ "nes", "fceumm", "NES" },
-	{ "fds", "fceumm", "NES" },
-	{ "gb", "gambatte", "Game Boy" },
-	{ "gbc", "gambatte", "Game Boy Color" },
-	{ "gba", "gpsp", "Game Boy Advance" },
-	{ "md", "picodrive", "Mega Drive" },
-	{ "gen", "picodrive", "Mega Drive" },
-	{ "smd", "picodrive", "Mega Drive" },
-	{ "sms", "picodrive", "Master System" },
-	{ "gg", "picodrive", "Game Gear" },
-	{ "sfc", "snes9x2005", "Super Nintendo" },
-	{ "smc", "snes9x2005", "Super Nintendo" },
-	{ "zip", "mame2003_plus", B_TRANSLATE_MARK("Arcade") },
-	{ "vec", "vecx", "Vectrex" },
-	{ "cue", "pcsx_rearmed", "PlayStation" },
-	{ "pbp", "pcsx_rearmed", "PlayStation" },
-	{ "chd", "pcsx_rearmed", "PlayStation" },
-	{ "tic", "tic80", "TIC-80" },
-	// a text file: the program to start, then one argument per line
-	{ "gioco", NULL, B_TRANSLATE_MARK("Haiku game") },
-};
 
 
 static const rgb_color kTileColors[] = {
@@ -200,17 +171,8 @@ GameLibrary::Scan()
 		char leaf[B_FILE_NAME_LENGTH];
 		entry.GetName(leaf);
 		const char* dot = strrchr(leaf, '.');
-		if (dot == NULL || leaf[0] == '.')
-			continue;
-
-		const SystemInfo* system = NULL;
-		for (const SystemInfo& candidate : kSystems) {
-			if (strcasecmp(dot + 1, candidate.extension) == 0) {
-				system = &candidate;
-				break;
-			}
-		}
-		if (system == NULL)
+		const SystemInfo* system = FindSystem(leaf);
+		if (system == NULL || leaf[0] == '.')
 			continue;
 
 		BString core;
@@ -230,8 +192,7 @@ GameLibrary::Scan()
 		game.path = path.Path();
 		game.core = core;
 		game.system = B_TRANSLATE_NOCOLLECT(system->system);
-		game.arcade = system->core != NULL
-			&& strcmp(system->core, "mame2003_plus") == 0;
+		game.arcade = IsArcade(system);
 		game.native = system->core == NULL;
 		game.saveBase = fSaveDirectory;
 		game.saveBase << "/" << base;

@@ -6,6 +6,10 @@
 #define LAUNCHER_VIEW_H
 
 
+#include <String.h>
+
+#include <vector>
+
 #include "Screen.h"
 
 
@@ -32,8 +36,13 @@ public:
 			void				GamesChanged();
 
 private:
+			bool				_IsVisible(int32 index) const;
 			int32				_CountVisible() const;
 			int32				_VisibleIndex(int32 visible) const;
+			std::vector<BString> _Categories() const;
+			void				_ChangeCategory(int32 step);
+			BRect				_CategoryFrame(BRect bounds) const;
+			void				_DrawCategory(BRect bounds);
 			BRect				_TileFrame(float distance) const;
 			void				_DrawTopBar(BRect bounds);
 			void				_DrawTile(int32 index, BRect frame,
@@ -47,6 +56,7 @@ private:
 			GameLibrary&		fLibrary;
 			Settings&			fSettings;
 			Sounds&				fSounds;
+			BString				fCategory;	// a system, empty for all
 			int32				fSelected;	// index into the visible games
 			float				fScroll;	// glides towards fSelected
 			BMessageRunner*		fAnimation;

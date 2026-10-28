@@ -1,0 +1,24 @@
+/*
+ * Copyright 2026, Andrea Bernardi
+ * SPDX-License-Identifier: MIT
+ */
+
+resource app_signature "application/x-vnd.atomozero-SalaGiochi-Installer";
+
+// files dropped on the icon go to the window that is already open
+resource app_flags B_SINGLE_LAUNCH;
+
+resource app_version {
+	major  = 0,
+	middle = 1,
+	minor  = 0,
+	variety = B_APPV_DEVELOPMENT,
+	internal = 0,
+	short_info = "Add games",
+	long_info = "Adds games to SalaGiochi. ©2026 Andrea Bernardi"
+};
+
+// any file can be dropped on it: the games are told apart by their names
+resource file_types message {
+	"types" = "application/octet-stream"
+};

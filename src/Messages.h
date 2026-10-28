@@ -19,6 +19,7 @@ enum {
 	kMsgExitApp			= 'exit',
 	kMsgSettingsChanged	= 'sets',
 	kMsgNativeEnded		= 'nend',	// a Haiku game was closed
+	kMsgRescan			= 'rscn',	// from the installer: new games
 };
 
 

@@ -47,6 +47,7 @@ private:
 			void				_CloseParents();
 			void				_PollPad();
 			void				_PlayTick();
+			void				_Rescan();
 			bool				_HandleKey(BMessage* message, bool down);
 			void				_UpdateKeyButtons();
 
@@ -74,6 +75,7 @@ private:
 			BMessageRunner*		fCornerRunner;
 			bigtime_t			fPadComboStart;
 			team_id				fNativeTeam;	// a Haiku game running
+			bool				fRescan;		// new games, once nothing runs
 };
 
 

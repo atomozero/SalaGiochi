@@ -109,7 +109,8 @@ MainWindow::MainWindow()
 	fCornerDown(0),
 	fCornerRunner(NULL),
 	fPadComboStart(0),
-	fNativeTeam(-1)
+	fNativeTeam(-1),
+	fRescan(false)
 {
 	memset(fKeysDown, 0, sizeof(fKeysDown));
 
@@ -406,6 +407,7 @@ MainWindow::MessageReceived(BMessage* message)
 		case kMsgQuitGame:
 			fSounds.Back();
 			_StopGame();
+			_Rescan();
 			_Show(fLauncher);
 			break;
 		case kMsgOpenParents:
@@ -433,10 +435,15 @@ MainWindow::MessageReceived(BMessage* message)
 			delete fPlayRunner;
 			fPlayRunner = NULL;
 			fSettings.Save();
+			_Rescan();
 			if (IsHidden())
 				Show();
 			_Show(fSettings.MinutesLeft() > 0 ? (Screen*)fLauncher : fTimeUp);
 			Activate();
+			break;
+		case kMsgRescan:
+			fRescan = true;
+			_Rescan();
 			break;
 		case kMsgExitApp:
 			_StopGame();
@@ -633,6 +640,21 @@ MainWindow::_OpenParents(bool askQuestion)
 	fBeforeParents = _Current();
 	fParents->Reset(askQuestion);
 	_Show(fParents);
+}
+
+
+/*!	Reads the games again when the installer added some, but not while one
+	is running: the game has its entry in the library.
+*/
+void
+MainWindow::_Rescan()
+{
+	if (!fRescan || fCore != NULL || fNativeTeam >= 0)
+		return;
+	fRescan = false;
+	fLibrary.Scan();
+	fLauncher->GamesChanged();
+	fCurrent->Invalidate();
 }
 
 
