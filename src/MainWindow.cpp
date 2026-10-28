@@ -202,6 +202,12 @@ MainWindow::DispatchMessage(BMessage* message, BHandler* target)
 			float scale = Style::LayoutScale(Bounds());
 			where.Set(where.x / scale, where.y / scale);
 		}
+		if (message->HasPoint("screen_where") && kCorner.Contains(where)
+			&& message->GetInt32("clicks", 1) == 2 && _Current() == fLauncher) {
+			// a double click on the sun goes back to the desktop
+			PostMessage(kMsgExitApp);
+			return;
+		}
 		if (message->HasPoint("screen_where") && kCorner.Contains(where)) {
 			fCornerDown = system_time();
 			delete fCornerRunner;
