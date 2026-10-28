@@ -31,6 +31,7 @@ public:
 	virtual	void				DispatchMessage(BMessage* message,
 									BHandler* target);
 	virtual	void				MessageReceived(BMessage* message);
+	virtual	void				ScreenChanged(BRect frame, color_space mode);
 	virtual	bool				QuitRequested();
 
 private:

@@ -30,6 +30,11 @@ extern const rgb_color kPaper;		// parents' area
 extern const rgb_color kInk;		// text on kPaper
 extern const rgb_color kInkSoft;
 
+// The screens are laid out for 1024x600 (the AC100) and scaled to the real
+// size of the screen
+extern const BSize kLayoutSize;
+float		LayoutScale(BRect bounds);
+
 BFont		Font(float size, bool bold = true);
 void		DrawCentered(BView* view, const char* text, BRect frame,
 				const BFont& font, rgb_color color);

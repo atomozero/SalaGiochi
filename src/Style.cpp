@@ -6,6 +6,8 @@
 
 #include "Style.h"
 
+#include <algorithm>
+
 #include <Shape.h>
 #include <View.h>
 
@@ -25,6 +27,18 @@ const rgb_color kMist = { 185, 203, 228, 255 };
 const rgb_color kPaper = { 238, 242, 247, 255 };
 const rgb_color kInk = { 23, 48, 79, 255 };
 const rgb_color kInkSoft = { 74, 91, 112, 255 };
+
+
+const BSize kLayoutSize(1024, 600);
+
+
+float
+LayoutScale(BRect bounds)
+{
+	float scale = std::min((bounds.Width() + 1) / kLayoutSize.width,
+		(bounds.Height() + 1) / kLayoutSize.height);
+	return std::max(0.5f, scale);
+}
 
 
 // every drawing blends by the alpha of its color

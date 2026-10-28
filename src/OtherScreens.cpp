@@ -36,9 +36,10 @@ TimeUpView::TimeUpView()
 void
 TimeUpView::Draw(BRect updateRect)
 {
-	BRect bounds = Bounds();
+	SetScale(LayoutScale());
+	BRect bounds = LayoutBounds();
 	SetHighColor(kNightLight);
-	FillRect(updateRect);
+	FillRect(bounds);
 
 	// a few stars
 	static const BPoint kStars[] = {
@@ -111,7 +112,7 @@ ParentsView::Reset(bool askQuestion)
 BRect
 ParentsView::_AnswerFrame(int32 answer) const
 {
-	BRect bounds = Bounds();
+	BRect bounds = LayoutBounds();
 	float left = bounds.Width() / 2 - 300 + answer * 210;
 	float top = bounds.Height() / 2;
 	return BRect(left, top, left + 180, top + 110);
@@ -166,7 +167,7 @@ ParentsView::_CountLines() const
 BRect
 ParentsView::_LineFrame(int32 line) const
 {
-	BRect bounds = Bounds();
+	BRect bounds = LayoutBounds();
 	int32 fitting = (int32)((bounds.Height() - kHeader - 20) / kLineHeight);
 	int32 first = 0;
 	if (fLine >= fitting)
@@ -179,9 +180,10 @@ ParentsView::_LineFrame(int32 line) const
 void
 ParentsView::Draw(BRect updateRect)
 {
-	BRect bounds = Bounds();
+	SetScale(LayoutScale());
+	BRect bounds = LayoutBounds();
 	SetHighColor(kPaper);
-	FillRect(updateRect);
+	FillRect(bounds);
 
 	DrawText(this, B_TRANSLATE("Parents' area"), BPoint(32, 50), Font(30),
 		kInk);
@@ -252,6 +254,7 @@ ParentsView::Draw(BRect updateRect)
 void
 ParentsView::MouseDown(BPoint where)
 {
+	where = ToLayout(where);
 	if (fAsking) {
 		for (int32 i = 0; i < 3; i++) {
 			if (_AnswerFrame(i).Contains(where))

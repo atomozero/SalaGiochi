@@ -24,6 +24,7 @@
 #include "LauncherView.h"
 #include "Messages.h"
 #include "OtherScreens.h"
+#include "Style.h"
 #include "libretro.h"
 
 
@@ -31,7 +32,8 @@ static const bigtime_t kPadInterval = 40000;
 static const bigtime_t kPlayInterval = 5000000;
 static const bigtime_t kParentsHold = 3000000;
 static const bigtime_t kPadParentsHold = 5000000;
-static const BRect kCorner(0, 0, 110, 72);	// the sun and "Hello!"
+static const BRect kCorner(0, 0, 110, 72);
+	// the sun and "Hello!", in the units of Style::kLayoutSize
 static const uint32 kMsgCornerCheck = 'corn';
 
 // raw key codes of a Haiku keyboard
@@ -151,6 +153,16 @@ MainWindow::~MainWindow()
 }
 
 
+void
+MainWindow::ScreenChanged(BRect frame, color_space mode)
+{
+	// another resolution, or the AC100 moved to the HDMI output: cover the
+	// whole screen again, the screens follow and scale themselves
+	MoveTo(frame.LeftTop());
+	ResizeTo(frame.Width(), frame.Height());
+}
+
+
 bool
 MainWindow::QuitRequested()
 {
@@ -184,8 +196,12 @@ MainWindow::DispatchMessage(BMessage* message, BHandler* target)
 	// the mouse or touchpad held three seconds on the sun, top left
 	if (message->what == B_MOUSE_DOWN) {
 		BPoint where;
-		if (message->FindPoint("screen_where", &where) == B_OK
-			&& kCorner.Contains(ConvertFromScreen(where))) {
+		if (message->FindPoint("screen_where", &where) == B_OK) {
+			where = ConvertFromScreen(where);
+			float scale = Style::LayoutScale(Bounds());
+			where.Set(where.x / scale, where.y / scale);
+		}
+		if (message->HasPoint("screen_where") && kCorner.Contains(where)) {
 			fCornerDown = system_time();
 			delete fCornerRunner;
 			fCornerRunner = new BMessageRunner(BMessenger(this),

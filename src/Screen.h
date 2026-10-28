@@ -8,6 +8,8 @@
 
 #include <View.h>
 
+#include "Style.h"
+
 
 enum Action {
 	kActionLeft,
@@ -32,6 +34,26 @@ public:
 								}
 
 	virtual	void				HandleAction(Action action) = 0;
+
+protected:
+	// The screens draw in the units of Style::kLayoutSize: Draw() starts with
+	// SetScale(LayoutScale()), and LayoutBounds() is Bounds() in these units.
+			float				LayoutScale() const
+									{ return Style::LayoutScale(Bounds()); }
+			BRect				LayoutBounds() const
+								{
+									float scale = LayoutScale();
+									BRect bounds = Bounds();
+									return BRect(0, 0,
+										(bounds.Width() + 1) / scale - 1,
+										(bounds.Height() + 1) / scale - 1);
+								}
+			BPoint				ToLayout(BPoint where) const
+								{
+									float scale = LayoutScale();
+									return BPoint(where.x / scale,
+										where.y / scale);
+								}
 };
 
 

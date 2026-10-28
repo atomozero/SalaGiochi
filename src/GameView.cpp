@@ -82,7 +82,8 @@ GameView::FrameReady()
 void
 GameView::Draw(BRect updateRect)
 {
-	BRect bounds = Bounds();
+	// the picture fills the screen, only the pause is laid out
+	SetScale(1);
 	BRect video = _VideoFrame();
 
 	// the borders around the picture
@@ -102,15 +103,17 @@ GameView::Draw(BRect updateRect)
 		fCore->UnlockFrame();
 	}
 
-	if (fPaused)
-		_DrawPause(bounds);
+	if (fPaused) {
+		SetScale(LayoutScale());
+		_DrawPause(LayoutBounds());
+	}
 }
 
 
 BRect
 GameView::_ButtonFrame(int32 button) const
 {
-	BRect bounds = Bounds();
+	BRect bounds = LayoutBounds();
 	float centerX = bounds.Width() / 2;
 	float top = bounds.Height() / 2 - 60;
 	float left = button == 0 ? centerX - 316 : centerX + 16;
@@ -170,6 +173,7 @@ GameView::MouseDown(BPoint where)
 		Window()->PostMessage(kMsgPause);
 		return;
 	}
+	where = ToLayout(where);
 	for (int32 button = 0; button < 2; button++) {
 		if (_ButtonFrame(button).Contains(where))
 			_Choose(button);

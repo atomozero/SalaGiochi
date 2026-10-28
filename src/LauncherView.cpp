@@ -103,7 +103,7 @@ LauncherView::_VisibleIndex(int32 visible) const
 BRect
 LauncherView::_TileFrame(float distance) const
 {
-	BRect bounds = Bounds();
+	BRect bounds = LayoutBounds();
 	float centerX = bounds.left + bounds.Width() / 2;
 	float centerY = kTopBar
 		+ (bounds.Height() - kTopBar - kBottomBar - kTitleArea) / 2 + 6;
@@ -127,10 +127,11 @@ LauncherView::_TileFrame(float distance) const
 void
 LauncherView::Draw(BRect updateRect)
 {
-	BRect bounds = Bounds();
+	SetScale(LayoutScale());
+	BRect bounds = LayoutBounds();
 	SetDrawingMode(B_OP_COPY);
 	SetHighColor(kNight);
-	FillRect(updateRect);
+	FillRect(bounds);
 
 	_DrawTopBar(bounds);
 
@@ -378,6 +379,7 @@ LauncherView::MessageReceived(BMessage* message)
 void
 LauncherView::MouseDown(BPoint where)
 {
+	where = ToLayout(where);
 	int32 count = _CountVisible();
 	// the middle tile is on top: look at it first
 	for (int32 away = 0; away <= 4; away++) {
