@@ -6,6 +6,8 @@
 
 #include "GameView.h"
 
+#include <algorithm>
+
 #include <Bitmap.h>
 #include <Region.h>
 #include <Window.h>
@@ -29,7 +31,8 @@ GameView::GameView()
 	Screen("game"),
 	fCore(NULL),
 	fPaused(false),
-	fChoice(0)
+	fChoice(0),
+	fTouching(false)
 {
 	SetViewColor(B_TRANSPARENT_COLOR);
 }
@@ -169,6 +172,14 @@ GameView::_DrawPause(BRect bounds)
 void
 GameView::MouseDown(BPoint where)
 {
+	if (!fPaused && fCore != NULL && fCore->WantsPointer()
+		&& _VideoFrame().Contains(where)) {
+		// a touch screen: the mouse is the stylus
+		fTouching = true;
+		SetMouseEventMask(B_POINTER_EVENTS, B_NO_POINTER_HISTORY);
+		_Touch(where, true);
+		return;
+	}
 	if (!fPaused) {
 		Window()->PostMessage(kMsgPause);
 		return;
@@ -178,6 +189,40 @@ GameView::MouseDown(BPoint where)
 		if (_ButtonFrame(button).Contains(where))
 			_Choose(button);
 	}
+}
+
+
+void
+GameView::MouseMoved(BPoint where, uint32 transit,
+	const BMessage* dragMessage)
+{
+	if (fTouching)
+		_Touch(where, true);
+}
+
+
+void
+GameView::MouseUp(BPoint where)
+{
+	if (fTouching) {
+		fTouching = false;
+		_Touch(where, false);
+	}
+}
+
+
+void
+GameView::_Touch(BPoint where, bool pressed)
+{
+	if (fCore == NULL)
+		return;
+	BRect video = _VideoFrame();
+	float x = (where.x - video.left) / (video.Width() + 1);
+	float y = (where.y - video.top) / (video.Height() + 1);
+	x = std::min(std::max(x, 0.0f), 1.0f);
+	y = std::min(std::max(y, 0.0f), 1.0f);
+	fCore->SetPointer((int16)(x * 65534 - 32767), (int16)(y * 65534 - 32767),
+		pressed);
 }
 
 

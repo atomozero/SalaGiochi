@@ -37,6 +37,7 @@ static const SystemInfo kSystems[] = {
 	{ "cue", "pcsx_rearmed", "PlayStation", "Sony_-_PlayStation" },
 	{ "pbp", "pcsx_rearmed", "PlayStation", "Sony_-_PlayStation" },
 	{ "chd", "pcsx_rearmed", "PlayStation", "Sony_-_PlayStation" },
+	{ "nds", "desmume2015", "Nintendo DS", "Nintendo_-_Nintendo_DS" },
 	{ "tic", "tic80", "TIC-80", NULL },
 	// a text file: the program to start, then one argument per line
 	{ "gioco", NULL, B_TRANSLATE_MARK("Haiku game"), NULL },

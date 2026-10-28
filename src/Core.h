@@ -51,6 +51,10 @@ public:
 			// Start puts a coin in first, as arcade games want
 			void				SetCoinOnStart(bool coin)
 									{ fCoinOnStart = coin; }
+			// a touch screen (the DS): where the picture is touched, from
+			// -0x7fff to 0x7fff across it
+			bool				WantsPointer() const;
+			void				SetPointer(int16 x, int16 y, bool pressed);
 
 			const BBitmap*		LockFrame(BRect& source);
 			void				UnlockFrame();
@@ -107,6 +111,7 @@ private:
 			void*				(*fGetMemoryData)(unsigned);
 			size_t				(*fGetMemorySize)(unsigned);
 
+			BString				fName;		// of the core: "fceumm"...
 			BString				fSaveBase;
 			BString				fSystemDirectory;
 			BString				fSaveDirectory;
@@ -114,6 +119,7 @@ private:
 			retro_system_av_info fAVInfo;
 			retro_pixel_format	fPixelFormat;
 			std::map<std::string, std::string> fVariables;
+			std::atomic<int32>	fPointer;	// x, y and pressed, packed
 
 			BLocker				fFrameLock;
 			BBitmap*			fFront;

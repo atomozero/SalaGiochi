@@ -25,12 +25,16 @@ public:
 
 	virtual	void				Draw(BRect updateRect);
 	virtual	void				MouseDown(BPoint where);
+	virtual	void				MouseMoved(BPoint where, uint32 transit,
+									const BMessage* dragMessage);
+	virtual	void				MouseUp(BPoint where);
 	virtual	void				HandleAction(Action action);
 
 			void				FrameReady();
 
 private:
 			BRect				_VideoFrame() const;
+			void				_Touch(BPoint where, bool pressed);
 			BRect				_ButtonFrame(int32 button) const;
 			void				_DrawPause(BRect bounds);
 			void				_Choose(int32 button);
@@ -38,6 +42,7 @@ private:
 			Core*				fCore;
 			bool				fPaused;
 			int32				fChoice;	// 0 continue, 1 other games
+			bool				fTouching;	// the mouse on a touch screen
 };
 
 

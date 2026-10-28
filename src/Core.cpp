@@ -24,6 +24,23 @@
 Core* Core::sCurrent = NULL;
 
 
+struct CoreOption {
+	const char*	core;
+	const char*	key;
+	const char*	value;
+};
+
+
+// What differs from the defaults of the cores, for the AC100
+static const CoreOption kCoreOptions[] = {
+	// the touch screen with the mouse; the 3D on both CPUs and every
+	// other frame drawn, as a race runs at about 11 fps otherwise
+	{ "desmume2015", "desmume_pointer_type", "touch" },
+	{ "desmume2015", "desmume_num_cores", "2" },
+	{ "desmume2015", "desmume_frameskip", "1" },
+};
+
+
 static void
 log_printf(enum retro_log_level level, const char* format, ...)
 {
@@ -101,6 +118,7 @@ Core::Core(const BMessenger& target, Gamepad* gamepad)
 	fGetMemorySize(NULL),
 	fGameData(NULL),
 	fPixelFormat(RETRO_PIXEL_FORMAT_0RGB1555),
+	fPointer(0),
 	fFrameLock("frame"),
 	fFront(NULL),
 	fBack(NULL),
@@ -139,6 +157,10 @@ Core::Load(const char* corePath, const char* gamePath, const char* saveBase)
 {
 	if (sCurrent != NULL)
 		return B_BUSY;
+
+	fName = corePath;
+	fName.Remove(0, fName.FindLast('/') + 1);
+	fName.RemoveLast("_libretro.so");
 
 	fHandle = dlopen(corePath, RTLD_NOW | RTLD_LOCAL);
 	if (fHandle == NULL) {
@@ -437,6 +459,13 @@ Core::_HandleEnvironment(unsigned command, void* data)
 		case RETRO_ENVIRONMENT_GET_VARIABLE:
 		{
 			retro_variable* variable = (retro_variable*)data;
+			for (const CoreOption& option : kCoreOptions) {
+				if (fName == option.core
+					&& strcmp(variable->key, option.key) == 0) {
+					variable->value = option.value;
+					return true;
+				}
+			}
 			auto found = fVariables.find(variable->key);
 			if (found == fVariables.end()) {
 				variable->value = NULL;
@@ -718,9 +747,37 @@ Core::_InputPoll()
 }
 
 
+bool
+Core::WantsPointer() const
+{
+	return fName == "desmume2015";
+}
+
+
+void
+Core::SetPointer(int16 x, int16 y, bool pressed)
+{
+	fPointer = (int32)(((uint32)(uint16)x << 16) | ((uint16)y & 0xfffe)
+		| (pressed ? 1 : 0));
+}
+
+
 int16_t
 Core::_InputState(unsigned port, unsigned device, unsigned index, unsigned id)
 {
+	if (sCurrent != NULL && port == 0
+		&& (device & RETRO_DEVICE_MASK) == RETRO_DEVICE_POINTER && index == 0) {
+		uint32 pointer = (uint32)sCurrent->fPointer.load();
+		switch (id) {
+			case RETRO_DEVICE_ID_POINTER_X:
+				return (int16_t)(pointer >> 16);
+			case RETRO_DEVICE_ID_POINTER_Y:
+				return (int16_t)(pointer & 0xfffe);
+			case RETRO_DEVICE_ID_POINTER_PRESSED:
+				return pointer & 1;
+		}
+		return 0;
+	}
 	if (sCurrent == NULL || port != 0
 		|| (device & RETRO_DEVICE_MASK) != RETRO_DEVICE_JOYPAD)
 		return 0;
